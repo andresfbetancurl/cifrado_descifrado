@@ -135,25 +135,25 @@ def decrypt_message(recipient_priv, payload_b64):
 sg.theme("LightBlue2")
 
 layout = [
-    [sg.Text("Secure Messaging GUI", font=("Helvetica", 16))],
-    [sg.Frame("Key Management", [
-        [sg.Button("Generate Keys"), sg.InputText("my_priv.pem", size=(20,1), key="privfile"), sg.InputText("my_pub.pem", size=(20,1), key="pubfile")],
-        [sg.Text("Load My Private Key:"), sg.Input(key="privpath"), sg.FileBrowse()],
-        [sg.Text("Recipient Public Key:"), sg.Input(key="recipub"), sg.FileBrowse()]
+    [sg.Text("Mensajería segura", font=("Helvetica", 16))],
+    [sg.Frame("Administración de llaves", [
+        [sg.Button("Generar llaves"), sg.InputText("mi_privada.pem", size=(20,1), key="privfile"), sg.InputText("mi_publica.pem", size=(20,1), key="pubfile")],
+        [sg.Text("Cargar mi llave privada:"), sg.Input(key="privpath"), sg.FileBrowse()],
+        [sg.Text("Llave pública de interlocutor:"), sg.Input(key="recipub"), sg.FileBrowse()]
     ])],
-    [sg.Frame("Encrypt", [
+    [sg.Frame("Cifrado", [
         [sg.Multiline(size=(60,5), key="msg")],#, placeholder="Type your message here...")],
-        [sg.Checkbox("Sign with my private key", key="dosign")],
-        [sg.Button("Encrypt"), sg.Multiline(size=(60,5), key="out_enc", disabled=True)]
+        [sg.Checkbox("Firmar con mi llave privada", key="dosign")],
+        [sg.Button("Cifrar"), sg.Multiline(size=(60,5), key="out_enc", disabled=True)]
     ])],
-    [sg.Frame("Decrypt", [
+    [sg.Frame("Descifrado", [
         [sg.Multiline(size=(60,5), key="payload")],#, placeholder="Paste payload here...")],
-        [sg.Button("Decrypt"), sg.Multiline(size=(60,5), key="out_dec", disabled=True)]
+        [sg.Button("Descifrar"), sg.Multiline(size=(60,5), key="out_dec", disabled=True)]
     ])],
-    [sg.Button("Exit")]
+    [sg.Button("Salir")]
 ]
 
-window = sg.Window("Secure Messaging POC", layout, finalize=True)
+window = sg.Window("POC Mensajería segura", layout, finalize=True)
 
 # -----------------------
 # Ejecución del programa
@@ -164,21 +164,21 @@ recipient_pub = None
 
 while True:
     event, values = window.read()
-    if event in (sg.WIN_CLOSED, "Exit"):
+    if event in (sg.WIN_CLOSED, "Salir"):
         break
 
-    if event == "Generate Keys":
+    if event == "Generar llaves":
         priv, pub = generate_rsa_keypair()
         save_private_key(priv, values["privfile"])
         save_public_key(pub, values["pubfile"])
-        sg.popup("Keys generated and saved!")
+        sg.popup("Llaves generadas y guardadas!")
 
-    if event == "Encrypt":
+    if event == "Cifrar":
         if not values["recipub"]:
-            sg.popup_error("Please select recipient public key file")
+            sg.popup_error("Por favor seleccione el archivo con la llave pública del receptor")
             continue
         if not os.path.exists(values["recipub"]):
-            sg.popup_error("Recipient public key not found")
+            sg.popup_error("Llave pública del receptor no encontrada")
             continue
         recipient_pub = load_public_key(values["recipub"])
 
@@ -190,24 +190,26 @@ while True:
         enc = encrypt_message(recipient_pub, message, sender_priv)
         window["out_enc"].update(enc)
 
-    if event == "Decrypt":
+    if event == "Descifrar":
         if not values["privpath"]:
-            sg.popup_error("Please load your private key")
+            sg.popup_error("Por favor cargue su llave privada")
             continue
         if not os.path.exists(values["privpath"]):
-            sg.popup_error("Private key file not found")
+            sg.popup_error("Llave privada no encontrada")
             continue
         my_priv = load_private_key(values["privpath"])
 
         payload = values["payload"].strip()
         if not payload:
-            sg.popup_error("No payload provided")
+            sg.popup_error("No se ingreso mensaje a descifrar")
             continue
         dec, sig_valid = decrypt_message(my_priv, payload)
         if sig_valid is None:
-            msg = dec + "\n\n(Signature: not present)"
+            msg = dec + "\n\n(Firma: no presente)"
         else:
-            msg = dec + f"\n\n(Signature valid: {sig_valid})"
+            msg = dec + f"\n\n(Firma validad: {sig_valid})"
         window["out_dec"].update(msg)
 
 window.close()
+
+
