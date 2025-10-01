@@ -1,3 +1,5 @@
+Aplicación simple con interfaz gráfica para cifrar y descifrar mensajes de texto con llaves públicas y privadas
+
 Para ejecutar el programa:
 
 1. Instalar dependencias:
